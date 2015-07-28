@@ -1,0 +1,432 @@
+1.
+
+desc album;
+
+2.
+
+alter table invoice
+drop total;
+
+3.
+alter table customer
+add column sex varchar(1) not null default 'M';
+
+4.
+UPDATE customer
+SET sex='F'
+WHERE FirstName in ('Helena', 'Kara', 'Fernanda', 'Jenifer', 'Kathy', 'Heather', 'Julia', 'Martha' , 'Puja');
+
+5.
+insert into customer(CustomerId,FirstName,LastName,Email)
+values(100,'Peter','Petrovaj','ptdfsdf@');
+
+6.
+CREATE TABLE department
+(
+
+DepartmentId int,
+DapartmentName varchar(255),
+primary key (DepartmentId)
+
+); 
+
+
+CREATE TABLE employee
+(
+DepartmentId int,
+LastName varchar(255),
+foreign key (DepartmentId) references department(DepartmentId)
+);
+
+
+
+
+
+-----------------------------------------------ULOHA----------------------------------------------------------------------
+
+1.
+-- Vypíšte názvy všetkých skladieb, ktoré vytvorila skupina U2.
+ select * from track
+where composer = "U2";
+
+2.
+-- Zistite, ko¾ko sekúnd trvá skladba “One” od skupiny U2.
+select Milliseconds from track
+where Name="One" and Composer="U2";
+
+3.
+-- Vypíšte meno a priezvisko všetkých tých zákazníkov,
+-- ktorí pochádzajú z Èeskej republiky (Czech Republic).
+select FirstName,LastName from customer
+where Country="Czech Republic";
+
+4.
+-- Vypíšte zoznam všetkých skladieb, prièom vypíšete jej názov, skladate¾a, 
+-- jednotkovú cenu v dolároch (hodnota v ståpci UnitPrice), cenu v eurách (1$=0.76€)
+-- a v èeských korunách (1$=19.20CK). Pri vypisovaní jednotlivých prepoèítaných cien
+-- nezabudnite správne nazva aj ståpec (napr. USD, EUR, CZK) a za hodnotu pripíšte 
+-- aj samotnú jednotku ($, €, CK). Každú cenu zaokrúhlite na 2 desatinné miesta (funkcia ROUND()).
+
+
+  select Name , Composer,UnitPrice, concat((UnitPrice*0.76) ," $")   as PriceInEuro,
+  concat((UnitPrice*19.20) ," CZK")   as CZK from track;  
+
+
+5.
+-- Vypíšte všetky objednávky smerujúce do Ve¾kej Británie (United Kingdom)
+-- v mesiaci máj 2013. O objednávke vypíšte len jej id a dátum.  
+
+select InvoiceId,InvoiceDate from invoice 
+where BillingCountry="United Kingdom" and extract(month from InvoiceDate)=05 and extract(year from InvoiceDate)=2013;
+
+
+
+
+
+6.
+-- Zistite zoznam všetkých zamestnancov spoloènosti, ktorí nepochádzajú z USA.
+
+select * from employee
+where State != "USA";
+
+7.
+-- Zistite, ktorí zamestnanci majú narodeniny vo februári.
+select * from employee
+where extract(month from BirthDate)=02;
+
+8.
+-- Vypíšte zoznam všetkých zamestnancov, ktorí sa narodili v 70tych rokoch minulého tisícroèia.
+--  Vypíšte ich v poradí od najstaršieho po najmladšieho.
+
+select * from employee
+where extract(year from BirthDate)>1969 and extract(year from BirthDate)<1980
+order by BirthDate asc;
+
+9.
+-- Vypíšte zoznam zamestnancov v tvare meno, priezvisko, 
+-- dátum narodenia a poèet rokov daného zamestnanca.
+
+select * from customer
+where Email like '%gmail.com%' or Email like '%yahoo.com%';
+
+10.
+-- Vypíšte zoznam zamestnancov v tvare meno, priezvisko, 
+-- dátum narodenia a poèet rokov daného zamestnanca.
+
+select FirstName,LastName,BirthDate, EXTRACT(year from FROM_DAYS(Datediff(current_date(),BirthDate))) as Age  from  employee;
+
+
+
+------------------------------------------------------------23.7. ------------------------------------------------------------
+
+1.
+-- Vypíšte názvy všetkých albumov skupiny U2.
+select * from 
+album join artist
+on album.ArtistId=artist.ArtistId
+where artist.Name="U2";
+
+2.
+-- Vypíšte zoznam všetkých videosúborov.
+select * from mediatype
+join track on mediatype.MediaTypeId=track.MediaTypeId
+where mediatype.Name like'%video%';
+
+3.
+
+-- ich názvu. Nevypisujte však tie skladby, ktoré nemajú uvedené interpreta (ståpec COMPOSER má hodnotu NULL).
+-- Pre overenie správnosti je poèet týchto skladieb 1210.
+
+select track.Name, track.AlbumId, track.Composer, track.Milliseconds/1000 
+from track join playlisttrack
+on track.TrackId=playlisttrack.TrackId 
+join playlist on
+playlist.PlaylistId=playlisttrack.PlaylistId
+where track.Composer is not null
+ ;
+
+4.
+
+-- Zobrazte názvy všetkých albumov, ktoré sú soundtrack-mi (
+-- obsahujú aspoò jednu skladbu, ktorej žáner je Soundtrack). 
+-- Pre overenie správnosti je poèet týchto albumov 4.
+
+select distinct(album.Title) from track
+join genre on
+track.GenreId=genre.GenreId
+join album
+on album.AlbumId=track.AlbumId
+where genre.Name like '%Soundtrack%'
+;
+
+5.
+
+-- Vypíšte zoznam všetkých zákazníkov (ich ID, meno a priezvisko), 
+-- ktorí si zatia¾ nikdy niè neobjednali. (Pre potreby úlohy je potrebné
+-- vytvori aspoò jedného nového zákazník, èo bolo vašou úlohou vèera).
+
+select customer.CustomerId, customer.FirstName,customer.LastName from customer
+left join invoice
+on customer.CustomerId=invoice.CustomerId
+where invoice.InvoiceId is null;
+6.
+-- Vypíšte zoznam všetkých zákazníkov, ktorý v roku 2012 niè neobjednali.
+-- Výsledný zoznam usporiadajte pod¾a priezviska a mena vzostupne.
+
+select * from customer  join invoice
+on customer.CustomerId= invoice.CustomerId
+where extract(year from invoice.InvoiceDate) != 2012
+order by customer.LastName, customer.FirstName desc;
+
+7.
+-- Zistite meno, priezvisko a dátum narodenia najstaršieho zamestnanca.
+
+select * from employee
+order by employee.BirthDate asc
+limit 1 
+ ;
+
+
+1.
+-- Aká bola tržba z objednávok v máji 2013? Pre overenie správnosti bola táto tržba 37.62.
+
+select (sum(UnitPrice*Quantity) ) sum from invoice
+join invoiceline
+on invoiceline.InvoiceId= invoice.InvoiceId
+where extract(year from invoice.InvoiceDate) = 2013 and extract(month from invoice.InvoiceDate)=05;
+
+2.
+-- Vypíšte sumárne zisky z predaja po jednotlivých rokoch. Pre overenie správnosti dopytu viete,
+--  že celkový zisk z predaja v roku 2009 bol $449.46.
+
+select extract(year from InvoiceDate),sum(UnitPrice*Quantity) from invoiceline
+join invoice
+on invoice.InvoiceId= invoiceline.InvoiceId
+group by extract(year from InvoiceDate)
+;
+
+3.
+-- Ko¾ko skladieb sa nachádza v albume War? Pre overenie správnosti ich je 10.
+select count(track.AlbumId) from track
+where AlbumId=(select AlbumId from album where Title='War');
+
+
+
+4.
+-- Zistite celkový èas prehrávania albumu “War” od “U2” 
+-- v minútach a sekundách (milisekundy treba previest na minuty a sekundy).
+
+select (ROUND((sum(Milliseconds)/1000)/60)) minuty , ((((sum(Milliseconds)/1000)/60)-ROUND((sum(Milliseconds)/1000)/60))*60) sec from track
+where AlbumId=(select AlbumId from album where Title='War');
+
+5.
+-- Vypíšte zisky z predaja pod¾a jednotlivých krajín za rok 2012.
+-- Zoznam zoraïte pod¾a zisku od najvyšších po najnižšie.
+-- Pre overenie správnosti najvyššie zisky v roku 2012 boli
+--  dosiahnuté predajom v USA a najnižšie v Holandsku (20 záznamov, prvý je dvojica ‘USA’, 127.98).
+
+select invoice.BillingCountry,(sum(UnitPrice*Quantity) ) sum from invoice
+join invoiceline
+on invoiceline.InvoiceId= invoice.InvoiceId
+where extract(year from invoice.InvoiceDate) = 2012 
+group by invoice.BillingCountry 
+order by sum asc;
+
+6.
+
+-- Zistite èas v sekundách najdlhšej skladby, najkratšej skladby a priemerný èas skladieb albumu War od U2.
+select max(track.Milliseconds)/1000 as najdlhsia, 
+min(track.Milliseconds)/1000 as najkratsia,
+avg(track.Milliseconds)/1000 as priemer from track 
+join album
+on track.AlbumId=album.AlbumId
+where album.Title='War' and track.Composer='U2';
+
+7.
+
+-- Vypíšte sumárne zisky z predaja za jednotlivé mesiace a roky.
+-- Pre overenie správnosti dopytu viete, že v apríli 2011 bol celkový zisk z predaja $51.62.
+
+select extract(year_month from invoice.InvoiceDate) mesiac,  sum(UnitPrice*Quantity)  suma from  invoiceline
+join invoice on invoice.InvoiceId=invoiceline.InvoiceId
+group by mesiac
+;
+
+8. -- Aký skladate¾ je najob¾úbenejší u zákazníka Wyatta Girarda? (najob¾úbenejší - -- --kupoval ho najèastejšie, hodí sa vám LIMIT).
+
+
+SELECT     T.composer
+FROM        customer C
+        JOIN invoice I 
+            ON C.customerID = I.customerID
+              AND C.FirstName = 'Wyatt'
+       AND C.LastName = 'Girard'
+        JOIN invoiceLine IL USING(invoiceId)
+           JOIN track T USING(trackId)
+WHERE     composer IS NOT NULL
+GROUP BY     T.composer
+ORDER BY     count(*) DESC
+LIMIT 1;
+
+----------------------------------------vnorene dopyty-------------------------------------------------------------------
+
+1.
+-- Vypíšte názvy všetkých albumov skupiny U2.
+
+select album.Title from 
+album where album.ArtistId= (select artist.ArtistId from  artist  where artist.Name="U2");
+
+2.
+-- Vypíšte zoznam všetkých videosúborov.
+
+select * from track 
+where track.MediaTypeId=(select MediaTypeId from mediatype where mediatype.Name like'%video%');
+
+4.
+-- Zobrazte názvy všetkých albumov, ktoré sú soundtrack-mi (
+-- obsahujú aspoò jednu skladbu, ktorej žáner je Soundtrack). 
+-- Pre overenie správnosti je poèet týchto albumov 4.
+
+select album.Title from album
+where album.AlbumId in (select track.AlbumId from track 
+					    where track.GenreId in (select  genre.GenreId from genre 
+											    where genre.Name like '%Soundtrack%' ));
+
+
+
+5.
+-- Vypíšte zoznam všetkých zákazníkov (ich ID, meno a priezvisko), 
+-- ktorí si zatia¾ nikdy niè neobjednali. (Pre potreby úlohy je potrebné
+-- vytvori aspoò jedného nového zákazník, èo bolo vašou úlohou vèera).
+
+select customer.CustomerId, customer.FirstName, customer.LastName from customer
+where  customer.CustomerId  not in ( select invoice.CustomerId from invoice);
+
+
+
+--------------------------------------------------24.7.-----------------------------------------------------------------
+
+1.
+-- Vytvorte poh¾ad totalRevenue, ktorý vám vráti sumárne zisky pod¾a objednávok (tzn. id objednávky a k tomu jej tržba).
+
+create view totalRevenue as
+select  InvoiceId, sum(UnitPrice*Quantity) from invoiceline group by InvoiceId;
+
+2.
+-- Vypíšte zoznam všetkých umelcov v databáze, ktorý vznikne spojením záznamov
+--  z tabu¾ky Artist a Track. Výsledný zoznam usporiadajte pod¾a abecedy. 
+-- Pre overenie správnosti vášho dopytu bude výsledný zoznam obsahova 1080 záznamov.
+
+select  Name from artist
+union 
+select Composer from track where Composer is not null
+order by Name;
+
+3.
+-- Zistite najdlhšiu skladbu a najkratšiu skladbu v albume War od U2.
+
+create view  waru as
+select track.Name, track.Milliseconds  from   track
+join album on track.AlbumId=album.AlbumId
+join artist on artist.ArtistId=album.ArtistId
+where  album.Title like'%War%'
+and artist.Name like '%U2%';
+
+select * from
+waru where
+ waru.Milliseconds in ( select max( waru.Milliseconds) from waru) or 
+ waru.Milliseconds in ( select min( waru.Milliseconds) from waru);
+
+
+4.
+-- Vypíšte názvy všetkých skladieb, ktoré nepatria do playlistu Music Videos.
+--  Pre overenie správnosti je celkový poèet týchto skladieb 3502.
+
+select  * from track 
+where track.TrackId not in (select  distinct TrackId from playlisttrack 
+						where playlisttrack.PlaylistId in (select PlaylistId from playlist
+															where  playlist.Name = 'Music Videos'));
+
+5.
+-- Vypíšte zoznam skladieb, ktoré neboli kúpené ani raz.
+-- Pre overenie správnosti dopytu vedzte, že poèet týchto skladieb je 1519
+
+select  * from track
+where track.TrackId  not in (select invoiceline.TrackId from invoiceline);
+
+6.
+-- Vypíšte zoznam skladieb, ktoré boli kúpené aspoò 100x.
+-- Pre overenie správnosti dopytu vedzte, že poèet týchto
+--  skladieb je 0 a poèet skladieb predaných práve 2x je 256.
+
+select * from track
+where track.TrackId in ( select  TrackId  from invoiceline
+group by TrackId having sum(Quantity)=2);
+
+7.
+-- Vypíšte prvých 10 jedineèných (neopakujúcich sa) názvov skladieb z playlistu 'TV Shows' 
+-- usporiadaných pod¾a abecedy vzostupne (pre overenie je prvá “?” a posledná Adrift).
+
+SELECT     distinct t.name
+FROM         track t
+        join     playlistTrack pt using(trackId)
+        join     playlist p
+                on     pt.playlistId = p.playlistId
+                    and p.name = 'TV Shows'
+ORDER BY     t.name ASC
+LIMIT     10;
+
+
+
+
+8.
+-- Nájdite menovcov s rovnakým krstným menom (priezvisko nemusí by rovnaké)
+-- v tabu¾ke zákazníkov. Vypíšte ich spoloèné krstné meno ako name, potom priezvisko
+-- prvého menovca, a priezvisko druhého menovca. Na overenie je jeden pár menovcov
+-- Mark Philips a Mark Taylor a všetkých takýchto párov je poèet 3. Každú dvojicu vypíšte iba raz.
+
+select c1.FirstName, c1.LastName, c2.LastName from customer c1
+join customer c2
+where c1.FirstName=c2.FirstName and c1.CustomerId < c2.CustomerId ;
+
+9.
+-- Vypíšte informácie o zákazníkovi, ktorý minul v obchode najviac peòazí 
+-- (súèet jeho objednávok je najvyšší). Vypíšte jeho ID, meno, priezvisko a celkovú sumu.
+-- Na overenie je jej meno Helena Holý.
+
+select customer.FirstName, customer.LastName, sum(UnitPrice*Quantity) as sum from customer 
+join invoice on customer.CustomerId= invoice.CustomerId
+join invoiceline on invoiceline.InvoiceId= invoice.InvoiceId
+group by customer.CustomerId
+order by sum desc
+limit 1;
+
+
+1.
+-- Vypíšte tovar, ktorý sa nachádza na všetkých skladoch.
+
+select distinct tovar.id, tovar.nazov from tovar
+join stav_sklad on stav_sklad.id_tovar=tovar.id
+where stav_sklad.mnozstvo>0 
+group by tovar.nazov;
+
+select distinct tovar.id, tovar.nazov from stav_sklad 
+join tovar on stav_sklad.id_tovar=tovar.id
+where stav_sklad.mnozstvo > 0
+and id_sklad in (1,2,3);
+
+2.
+--    Vypíšte tovar, ktorý sa nachádza na všetkých skladoch.
+select stav_sklad.id_tovar, tovar.nazov from stav_sklad
+join tovar on stav_sklad.id_tovar=tovar.id
+group by id_tovar
+having count(stav_sklad.id_sklad)=(select count(id)from sklad);
+3.
+
+4.
+--    Tovar, ktory je aspon na 2 skladoch
+select stav_sklad.id_tovar, tovar.nazov from tovar join stav_sklad
+on tovar.id=stav_sklad.id_tovar
+group by id_tovar
+having count(stav_sklad.id_sklad)>=2;
+
